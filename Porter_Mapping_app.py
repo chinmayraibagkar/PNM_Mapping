@@ -181,6 +181,9 @@ if ga_dumb_file and report_file and mapping_ref_file:
         )
 
     if Get_Full_Mapped_data:
+        # Display full mapped data
+        st.dataframe(mapped_data_inner) 
+        
         # Download full mapped data
         csv = mapped_data_inner.to_csv(index=False)
         st.download_button(
