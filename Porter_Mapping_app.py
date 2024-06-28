@@ -31,7 +31,7 @@ mapping_ref_file = st.file_uploader("Upload Mapping Reference CSV", type="csv")
 
 if ga_dumb_file and report_file and mapping_ref_file:
     # Read CSV files
-    ga_dumb = pd.read_csv(ga_dumb_file)
+    ga_dumb = pd.read_csv(ga_dumb_file, skiprows=6, on_bad_lines='warn')
     report = pd.read_csv(report_file, encoding='latin-1')
     mapping_ref = pd.read_csv(mapping_ref_file)
 
