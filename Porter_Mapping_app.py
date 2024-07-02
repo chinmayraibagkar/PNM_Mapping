@@ -1,6 +1,5 @@
 import streamlit as st
 import pandas as pd
-pip install plotly
 import plotly.express as px
 
 def check_date_format(date_str, format):
