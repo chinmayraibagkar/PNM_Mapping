@@ -1,5 +1,9 @@
 import streamlit as st
 import pandas as pd
+import matplotlib.pyplot as plt
+from io import BytesIO
+import plotly
+import plotly.express as px
 
 def check_date_format(date_str, format):
     try:
@@ -11,6 +15,66 @@ def check_date_format(date_str, format):
 def filter_campaigns_by_city(campaign_names, city_name):
     filtered_campaigns = [campaign for campaign in campaign_names if city_name.lower() in campaign.lower()]
     return filtered_campaigns
+
+def plot_and_save_pi_chart(data, column, title):
+    fig = px.pie(data, names=column, title=title, hole=0.2)
+    fig.update_traces(textinfo='percent+label')
+    return fig
+
+def plot_and_save_pie_chart(data, column, title):
+    fig, ax = plt.subplots()
+    data[column].value_counts().plot.pie(autopct='%1.1f%%', ax=ax, figsize=(8, 8))
+    ax.set_title(title)
+    ax.set_ylabel('')
+    return fig
+
+def plot_and_save_bar_chart(data, x_column, y_columns, title, xlabel, ylabel):
+    fig, ax = plt.subplots()
+    data.groupby(x_column)[y_columns].sum().plot(kind='bar', ax=ax, figsize=(10, 6))
+    ax.set_title(title)
+    ax.set_xlabel(xlabel)
+    ax.set_ylabel(ylabel)
+    return fig
+
+def plot_and_save_stacked_bar_chart(data, x_column, y_columns, title, xlabel, ylabel):
+    fig, ax = plt.subplots()
+    data.groupby(x_column)[y_columns].sum().plot(kind='bar', stacked=True, ax=ax, figsize=(10, 6))
+    ax.set_title(title)
+    ax.set_xlabel(xlabel)
+    ax.set_ylabel(ylabel)
+    return fig
+
+def plot_and_save_line_chart(data, x_column, y_columns, title, xlabel, ylabel):
+    grouped_data = data.groupby(x_column)[y_columns].sum().reset_index()
+    fig = px.line(grouped_data, x=x_column, y=y_columns, title=title, labels={x_column: xlabel, 'value': ylabel})
+    return fig
+
+def plot_and_save_scatter_plot(data, x_column, y_column, title, xlabel, ylabel):
+    fig, ax = plt.subplots()
+    data.plot.scatter(x=x_column, y=y_column, ax=ax, figsize=(10, 6))
+    ax.set_title(title)
+    ax.set_xlabel(xlabel)
+    ax.set_ylabel(ylabel)
+    return fig
+
+def plot_and_save_histogram(data, column, title, xlabel, ylabel):
+    fig, ax = plt.subplots()
+    data[column].plot.hist(ax=ax, bins=30, figsize=(10, 6))
+    ax.set_title(title)
+    ax.set_xlabel(xlabel)
+    ax.set_ylabel(ylabel)
+    return fig
+
+def get_image_download_link(fig, filename, text):
+    buffer = BytesIO()
+    fig.savefig(buffer, format="png")
+    buffer.seek(0)
+    return st.download_button(
+        label=text,
+        data=buffer,
+        file_name=filename,
+        mime="image/png"
+    )
 
 # Streamlit UI
 st.title('Porter Data Mapping Tool')
@@ -26,7 +90,7 @@ columns_to_drop = ['Diposition', 'Requested At', 'Event count', 'Source', 'Sourc
 
 # Upload CSV files
 ga_dumb_file = st.file_uploader("Upload GA Dump CSV", type="csv")
-report_file = st.file_uploader("Upload Report CSV", type="csv")
+report_file = st.file_uploader("Upload SF Report CSV", type="csv")
 mapping_ref_file = st.file_uploader("Upload Mapping Reference CSV", type="csv")
 
 if ga_dumb_file and report_file and mapping_ref_file:
@@ -118,11 +182,20 @@ if ga_dumb_file and report_file and mapping_ref_file:
     if 'show_custom_data' not in st.session_state:
         st.session_state['show_custom_data'] = False
 
+    if 'show_visualizations' not in st.session_state:
+        st.session_state['show_visualizations'] = False
+
     Get_Custom_Data = st.button(label='Get Custom Data')
     Get_Full_Mapped_data = st.button(label='Get Full Mapped Data')
 
     if Get_Custom_Data:
         st.session_state['show_custom_data'] = True
+        st.session_state['show_visualizations'] = False
+
+    if Get_Full_Mapped_data:
+        st.session_state['filtered_data'] = mapped_data_inner
+        st.session_state['show_custom_data'] = False
+        st.session_state['show_visualizations'] = False
 
     if st.session_state['show_custom_data']:
         # Streamlit form for input
@@ -165,25 +238,57 @@ if ga_dumb_file and report_file and mapping_ref_file:
                 filtered_data = filtered_data[filtered_data['Status'].isin(status)]
 
             st.write(f'Number of records: {len(filtered_data)}')
+            st.dataframe(filtered_data)
             st.session_state['filtered_data'] = filtered_data
+            st.session_state['show_visualizations'] = False
 
     if st.session_state['filtered_data'] is not None:
-        # Display filtered data
-        st.dataframe(st.session_state['filtered_data'])
+        st.session_state['show_visualizations'] = True
 
         # Download filtered data
         csv = st.session_state['filtered_data'].to_csv(index=False)
         st.download_button(
-            label="Download Filtered as CSV",
+            label="Download Filtered Data as CSV",
             data=csv,
             file_name='filtered_data.csv',
             mime='text/csv',
         )
 
+    if st.session_state['show_visualizations']:
+        Get_Visualizations = st.button('Get Visualizations')
+
+        if Get_Visualizations:
+            st.header("Visualizations")
+
+            if st.session_state['filtered_data'] is not None:
+                data_to_visualize = st.session_state['filtered_data']
+                st.subheader("Filtered Data Visualizations")
+            else:
+                data_to_visualize = mapped_data_inner
+                st.subheader("Full Mapped Data Visualizations")
+
+            # Display and save visualizations
+            pie_all_leads = plot_and_save_pi_chart(data_to_visualize[(data_to_visualize['Date'].dt.month == 6)], 'City', 'Distribution of Leads by City')
+            st.plotly_chart(pie_all_leads)
+
+            intercity_leads_data = data_to_visualize[data_to_visualize['Intercity_Leads'] == 1 & 
+                                                    (data_to_visualize['Date'].dt.month == 6)]
+            pie_intercity_leads = plot_and_save_pi_chart(intercity_leads_data, 'City', 'Distribution of Intercity Leads by City')
+            st.plotly_chart(pie_intercity_leads)
+
+            intercity_conv_data = data_to_visualize[(data_to_visualize['Intercity_Conv'] == 1) & 
+                                                    (data_to_visualize['Date'].dt.month == 6)]
+            pie_intercity_conv = plot_and_save_pi_chart(intercity_conv_data, 'City', 'Distribution of Intercity Conversions by City')
+            st.plotly_chart(pie_intercity_conv)
+                        
+            line_fig = plot_and_save_line_chart(data_to_visualize[(data_to_visualize['Date'].dt.month == 6)], 'Date', ['SF_Leads', 'SF_Conv'], 
+                                                'Leads and Conversions Over Time', 'Date', 'Count')
+            st.plotly_chart(line_fig)
+            
     if Get_Full_Mapped_data:
-        # Display full mapped data
-        st.dataframe(mapped_data_inner) 
-        
+        # Show full mapped data
+        st.dataframe(mapped_data_inner)
+
         # Download full mapped data
         csv = mapped_data_inner.to_csv(index=False)
         st.download_button(
