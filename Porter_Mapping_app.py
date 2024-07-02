@@ -1,6 +1,5 @@
 import streamlit as st
 import pandas as pd
-import matplotlib.pyplot as plt
 import plotly.express as px
 
 def check_date_format(date_str, format):
@@ -19,48 +18,9 @@ def plot_and_save_pi_chart(data, column, title):
     fig.update_traces(textinfo='percent+label')
     return fig
 
-def plot_and_save_pie_chart(data, column, title):
-    fig, ax = plt.subplots()
-    data[column].value_counts().plot.pie(autopct='%1.1f%%', ax=ax, figsize=(8, 8))
-    ax.set_title(title)
-    ax.set_ylabel('')
-    return fig
-
-def plot_and_save_bar_chart(data, x_column, y_columns, title, xlabel, ylabel):
-    fig, ax = plt.subplots()
-    data.groupby(x_column)[y_columns].sum().plot(kind='bar', ax=ax, figsize=(10, 6))
-    ax.set_title(title)
-    ax.set_xlabel(xlabel)
-    ax.set_ylabel(ylabel)
-    return fig
-
-def plot_and_save_stacked_bar_chart(data, x_column, y_columns, title, xlabel, ylabel):
-    fig, ax = plt.subplots()
-    data.groupby(x_column)[y_columns].sum().plot(kind='bar', stacked=True, ax=ax, figsize=(10, 6))
-    ax.set_title(title)
-    ax.set_xlabel(xlabel)
-    ax.set_ylabel(ylabel)
-    return fig
-
 def plot_and_save_line_chart(data, x_column, y_columns, title, xlabel, ylabel):
     grouped_data = data.groupby(x_column)[y_columns].sum().reset_index()
     fig = px.line(grouped_data, x=x_column, y=y_columns, title=title, labels={x_column: xlabel, 'value': ylabel})
-    return fig
-
-def plot_and_save_scatter_plot(data, x_column, y_column, title, xlabel, ylabel):
-    fig, ax = plt.subplots()
-    data.plot.scatter(x=x_column, y=y_column, ax=ax, figsize=(10, 6))
-    ax.set_title(title)
-    ax.set_xlabel(xlabel)
-    ax.set_ylabel(ylabel)
-    return fig
-
-def plot_and_save_histogram(data, column, title, xlabel, ylabel):
-    fig, ax = plt.subplots()
-    data[column].plot.hist(ax=ax, bins=30, figsize=(10, 6))
-    ax.set_title(title)
-    ax.set_xlabel(xlabel)
-    ax.set_ylabel(ylabel)
     return fig
 
 # Streamlit UI
