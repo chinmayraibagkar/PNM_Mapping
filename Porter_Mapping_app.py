@@ -1,8 +1,6 @@
 import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
-from io import BytesIO
-import plotly
 import plotly.express as px
 
 def check_date_format(date_str, format):
@@ -64,17 +62,6 @@ def plot_and_save_histogram(data, column, title, xlabel, ylabel):
     ax.set_xlabel(xlabel)
     ax.set_ylabel(ylabel)
     return fig
-
-def get_image_download_link(fig, filename, text):
-    buffer = BytesIO()
-    fig.savefig(buffer, format="png")
-    buffer.seek(0)
-    return st.download_button(
-        label=text,
-        data=buffer,
-        file_name=filename,
-        mime="image/png"
-    )
 
 # Streamlit UI
 st.title('Porter Data Mapping Tool')
