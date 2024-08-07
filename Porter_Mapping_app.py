@@ -215,20 +215,20 @@ if ga_dumb_file and report_file and mapping_ref_file:
                 st.subheader("Full Mapped Data Visualizations")
 
             # Display and save visualizations
-            pie_all_leads = plot_and_save_pi_chart(data_to_visualize[(data_to_visualize['Date'].dt.month == 6)], 'City', 'Distribution of Leads by City')
+            pie_all_leads = plot_and_save_pi_chart(data_to_visualize[(data_to_visualize['Date'].dt.month == 7)], 'City', 'Distribution of Leads by City')
             st.plotly_chart(pie_all_leads)
 
             intercity_leads_data = data_to_visualize[data_to_visualize['Intercity_Leads'] == 1 & 
-                                                    (data_to_visualize['Date'].dt.month == 6)]
+                                                    (data_to_visualize['Date'].dt.month == 7)]
             pie_intercity_leads = plot_and_save_pi_chart(intercity_leads_data, 'City', 'Distribution of Intercity Leads by City')
             st.plotly_chart(pie_intercity_leads)
 
             intercity_conv_data = data_to_visualize[(data_to_visualize['Intercity_Conv'] == 1) & 
-                                                    (data_to_visualize['Date'].dt.month == 6)]
+                                                    (data_to_visualize['Date'].dt.month == 7)]
             pie_intercity_conv = plot_and_save_pi_chart(intercity_conv_data, 'City', 'Distribution of Intercity Conversions by City')
             st.plotly_chart(pie_intercity_conv)
                         
-            line_fig = plot_and_save_line_chart(data_to_visualize[(data_to_visualize['Date'].dt.month == 6)], 'Date', ['SF_Leads', 'SF_Conv'], 
+            line_fig = plot_and_save_line_chart(data_to_visualize[(data_to_visualize['Date'].dt.month == 7)], 'Date', ['SF_Leads', 'SF_Conv'], 
                                                 'Leads and Conversions Over Time', 'Date', 'Count')
             st.plotly_chart(line_fig)
             
